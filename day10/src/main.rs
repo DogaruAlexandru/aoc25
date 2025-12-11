@@ -59,8 +59,8 @@ fn solve1() {
                     }
                 }
             }
-            vec_from = vec_to;
-            vec_to = vec![];
+            std::mem::swap(&mut vec_from, &mut vec_to);
+            vec_to.clear();
             presses += 1;
         }
     }
