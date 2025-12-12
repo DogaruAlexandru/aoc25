@@ -1,11 +1,9 @@
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    fs,
-};
+use std::collections::{HashMap, VecDeque};
+use std::fs;
 
 fn main() {
     solve1();
-    // solve2();
+    solve2();
 }
 
 fn solve1() {
@@ -46,33 +44,38 @@ fn solve2() {
         })
         .collect();
 
-    let mut result = 0;
-    let mut visited = HashSet::new();
-    visited.insert(("svr", (false, false)));
-    let mut queue = VecDeque::new();
-    queue.push_back(("svr", (false, false)));
+    let mut cache = HashMap::new();
+    cache.insert(("out".to_string(), true, true), 1);
+    cache.insert(("out".to_string(), true, false), 0);
+    cache.insert(("out".to_string(), false, true), 0);
+    cache.insert(("out".to_string(), false, false), 0);
+    search(&paths, &mut cache, "svr", false, false);
 
-    while let Some(current) = queue.pop_front() {
-        for next in &paths[current.0] {
-            if *next == "out" {
-                if current.1 == (true, true) {
-                    result += 1;
-                }
-            } else {
-                if visited.contains(&(*next, current.1)) {
-                    continue;
-                }
-                visited.insert((*next, current.1));
-                let (mut dac, mut fft) = current.1;
-                match *next {
-                    "dac" => dac = true,
-                    "fft" => fft = true,
-                    _ => {}
-                }
-                queue.push_back((next, (dac, fft)));
-            }
-        }
+    println!("Result 2: {}", cache[&("svr".to_string(), false, false)]);
+}
+
+fn search(
+    paths: &HashMap<&str, Vec<&str>>,
+    cache: &mut HashMap<(String, bool, bool), usize>,
+    current: &str,
+    dac: bool,
+    fft: bool,
+) {
+    if cache.contains_key(&(current.to_string(), dac, fft)) {
+        return;
     }
 
-    println!("Result 2: {}", result);
+    for next in &paths[current] {
+        let (mut new_dac, mut new_fft) = (dac, fft);
+        match *next {
+            "dac" => new_dac = true,
+            "fft" => new_fft = true,
+            _ => {}
+        }
+        if !cache.contains_key(&((*next).to_string(), new_dac, new_fft)) {
+            search(paths, cache, next, new_dac, new_fft);
+        }
+        let count = cache[&((*next).to_string(), new_dac, new_fft)];
+        *cache.entry((current.to_string(), dac, fft)).or_insert(0) += count;
+    }
 }
